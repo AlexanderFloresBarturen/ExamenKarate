@@ -72,3 +72,46 @@ Feature: Pruebas de regresión
       | receptor |
 
 
+  Scenario: Transferencia del Usuario Emisor al Receptor
+    Given url 'http://134.209.211.10:4001'
+    And path '/auth/v1/login'
+    And header x-channel = 'POSTMAN'
+    And request
+    """
+    {
+      "phone": "#(emisor.phone)",
+      "pin": "#(emisor.pin)"
+    }
+    """
+    When method post
+    Then status 200
+    * def token = response.token
+
+    Given url 'http://134.209.211.10:4001'
+    And path '/auth/v1/login'
+    And header x-channel = 'POSTMAN'
+    And request
+    """
+    {
+      "phone": "#(receptor.phone)",
+      "pin": "#(receptor.pin)"
+    }
+    """
+    When method post
+    Then status 200
+
+    Given url 'http://134.209.211.10:4003'
+    And path '/transaction/v1/transfer'
+    And header x-channel = 'POSTMAN'
+    And header Authorization = 'Bearer ' + token
+    And request
+    """
+    {
+      "recipientId": "#(response.user.id)",
+      "amount": 450,
+      "description": "Pago de Servicios",
+      "categoryId": "cat_food_1"
+    }
+    """
+    When method post
+    Then status 200
